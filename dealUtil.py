@@ -106,6 +106,7 @@ def make_time_lst():
 # make_time_lst()
 
 def obtain_roadfile_list():
+    #生成想要的道路排列顺序
     root_path = 'D:\\mxnetLearn\\traffic_forcast\\selected_road_parse_info'
     dir_list = listdir(root_path)
     road_id_lst = []
@@ -138,7 +139,7 @@ def make_info_table(month='01',day='01',road_id_lst = [],path_lst = []):
     for road_file_path in path_lst:
         # 开始试验
         data_origin = pd.read_csv(road_file_path, dtype='str')
-        print(data_origin)
+        # print(data_origin)
         for time_ in time_cols:
             hr_tmp , min_tmp = time_.split('-')
             col_tmp = time_ #时间索引
@@ -151,26 +152,52 @@ def make_info_table(month='01',day='01',road_id_lst = [],path_lst = []):
                                  & (data_origin['day']==day)]['tti'].values[0]
 
             except:
-                error_info = 'error:'+ road_id_tmp + '['+ month + '-' + day + '-' + hr_tmp + '-' + min_tmp + ']' + '\n'
+                error_info = 'error:'+ road_id_tmp + '['+ month + '-' + \
+                             day + '-' + hr_tmp + '-' + min_tmp + ']' + '\n'
                 error_list.append(error_info)
-                print(error_info)
-                df.at[road_id_tmp, col_tmp] = None
+                # print(error_info)
+                df.at[road_id_tmp, col_tmp] = '1.000'
                 continue
             df.at[road_id_tmp, col_tmp] = tti_tmp
-        print(df)
+    print(df)
         #结束试验
     error_df = pd.DataFrame(error_list)
-    error_df.to_csv('D:\\mxnetLearn\\traffic_forcast\\data\\error_list.csv')
-    df.to_csv('D:\\mxnetLearn\\traffic_forcast\\test_data\\test_road_tti_table.csv')
+
+
+    error_path = 'D:\\mxnetLearn\\traffic_forcast\\tti_table\\error\\' + month +'_' + day + '.csv'
+    error_df.to_csv(error_path)
+    tti_table_path = 'D:\\mxnetLearn\\traffic_forcast\\tti_table\\table\\' + month +'_' + day + '.csv'
+    df.to_csv(tti_table_path)
     # print(df)
 
     pass
-
-# 下面两行代码要封装成一个遍历所有天的函数
-road_id_lst, path_lst = obtain_roadfile_list()
-make_info_table(month='01',day='01',road_id_lst=road_id_lst,path_lst=path_lst)
-
-
 # make_info_table()
+
+def produce_month_days():
+    #该函数用来生成一年中的月和日
+    data_df = pd.read_csv('D:\\mxnetLearn\\traffic_forcast\\test_data\\281897.csv',dtype='str')
+    # print(data_df)
+    df_tmp = pd.DataFrame(columns=['month-day'])
+    df_tmp = data_df['month'] +'-' + data_df['day']   # 合并两列
+    df_tmp.drop_duplicates(inplace=True)  # 去重
+    mon_day = df_tmp.values   #得到想要的日期
+    return mon_day
+# produce_month_days()
+def make_whole_year_road_info():
+    #生成全年的选中道路的tti表
+    road_id_lst, path_lst = obtain_roadfile_list()    #获取到道路罗列顺序列表
+    month_days = produce_month_days()    #获取月日列表
+    month_, day_ = '' ,''
+    # 开始进行遍历所有日期下的所有道路的各个时段tti信息
+    for month_day in month_days:
+        month_, day_ = month_day.split('-')
+        print(month_day)
+        make_info_table(month=month_,day=day_,road_id_lst=road_id_lst,path_lst=path_lst)
+
+make_whole_year_road_info()
+
+#
+
+
 pass
 
